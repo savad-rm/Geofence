@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	_ "github.com/lib/pq"
 )
 
@@ -126,21 +127,6 @@ func initDB() {
 	log.Println("Database schema initialized")
 }
 
-func enableCORS(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
 func respondJSON(w http.ResponseWriter, status int, data interface{}, startTime time.Time) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -163,8 +149,19 @@ func respondJSON(w http.ResponseWriter, status int, data interface{}, startTime 
 
 func main() {
 	r := chi.NewRouter()
+
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{
+			"https://6955daf9f484350008b7ac67--lambent-halva-ca8340.netlify.app",
+		},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
+
 	r.Use(middleware.Logger)
-	r.Use(enableCORS)
 
 	r.Post("/geofences", createGeofence)
 	r.Get("/geofences", getGeofences)
