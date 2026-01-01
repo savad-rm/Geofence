@@ -150,10 +150,22 @@ func respondJSON(w http.ResponseWriter, status int, data interface{}, startTime 
 func main() {
 	r := chi.NewRouter()
 
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodOptions {
+				w.Header().Set("Access-Control-Allow-Origin",
+					"https://6955daf9f484350008b7ac67--lambent-halva-ca8340.netlify.app")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	})
+
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{
-			"https://6955daf9f484350008b7ac67--lambent-halva-ca8340.netlify.app",
-		},
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		ExposedHeaders:   []string{"Link"},
