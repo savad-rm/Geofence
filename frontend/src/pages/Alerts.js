@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { alertAPI, geofenceAPI, vehicleAPI } from '../api';
 
 function Alerts() {
@@ -17,15 +17,7 @@ function Alerts() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    fetchAlerts();
-  }, [filter]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [geoRes, vehRes] = await Promise.all([
         geofenceAPI.getAll(),
@@ -36,9 +28,9 @@ function Alerts() {
     } catch (err) {
       console.error('Failed to fetch data', err);
     }
-  };
+  }, []);
 
-  const fetchAlerts = async () => {
+  const fetchAlerts = useCallback(async () => {
     try {
       setLoading(true);
       const response = await alertAPI.getAll(filter);
@@ -49,7 +41,15 @@ function Alerts() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    fetchAlerts();
+  }, [fetchAlerts]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

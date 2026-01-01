@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { violationAPI, vehicleAPI, geofenceAPI } from '../api';
 
 function Violations() {
@@ -15,15 +15,7 @@ function Violations() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    fetchViolations();
-  }, [filter]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [vehRes, geoRes] = await Promise.all([
         vehicleAPI.getAll(),
@@ -34,9 +26,9 @@ function Violations() {
     } catch (err) {
       console.error('Failed to fetch data', err);
     }
-  };
+  }, []);
 
-  const fetchViolations = async () => {
+  const fetchViolations = useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
@@ -54,7 +46,15 @@ function Violations() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    fetchViolations();
+  }, [fetchViolations]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -178,11 +178,10 @@ function Violations() {
                   <td>{violation.geofence_name}</td>
                   <td>
                     <span
-                      className={`badge ${
-                        violation.event_type === 'entry'
+                      className={`badge ${violation.event_type === 'entry'
                           ? 'badge-warning'
                           : 'badge-info'
-                      }`}
+                        }`}
                     >
                       {violation.event_type}
                     </span>

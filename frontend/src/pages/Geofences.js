@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { geofenceAPI } from '../api';
 
 function Geofences() {
@@ -13,11 +13,7 @@ function Geofences() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchGeofences();
-  }, [filter]);
-
-  const fetchGeofences = async () => {
+  const fetchGeofences = useCallback(async () => {
     try {
       setLoading(true);
       const response = await geofenceAPI.getAll(filter || undefined);
@@ -28,7 +24,11 @@ function Geofences() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchGeofences();
+  }, [fetchGeofences]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
